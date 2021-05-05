@@ -74,8 +74,9 @@ public:
 	
 	// solve model using cplex (uni-objective?)
 	int solve();
-	
-	int pareto_boundary();
+	int pareto_boundary_v1();
+
+	int pareto_boundary_v2();
 };
 
 std::ostream& operator<<(std::ostream& os, const FLPModel& instance);

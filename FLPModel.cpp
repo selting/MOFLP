@@ -188,7 +188,76 @@ int FLPModel::solve()
 	return opt;
 }
 
-int FLPModel::pareto_boundary()
+
+int FLPModel::pareto_boundary_v1()
+{
+	std::vector<int> opt_cost;
+	std::vector<int> opt_dist;
+
+	int omega = 1;
+	int epsilon = 9999;
+
+	// set epsilon constraint on f2
+	IloRange ub_f2(env_, 0, obj2_.getExpr(), epsilon);
+	model_.add(ub_f2);
+
+
+	while (true)
+	{
+		// set f1 as objective
+		model_.add(obj1_);
+		
+		//optimize the first objective
+		cplex_.exportModel("FLP.lp");
+		int z1 = solve();
+		if (cplex_.getStatus() != IloAlgorithm::Optimal)
+		{
+			break;
+		}
+
+		//collect the objective values
+		//int f1 = get_f1();
+		//int f2 = get_f2();
+		//opt_cost.push_back(f1);
+		//opt_dist.push_back(f2);
+
+		//set bound on f1
+		IloRange f1_bound(env_, 0, obj1_.getExpr(), z1);
+		model_.add(f1_bound);
+
+		//change the objective
+		model_.remove(obj1_);
+		model_.add(obj2_);
+
+		//optimize for the second objective
+		int z2 = solve();
+		if (cplex_.getStatus() != IloAlgorithm::Optimal)
+		{
+			break;
+		}
+
+		//collect the objective values
+		int f1 = get_f1();
+		int f2 = get_f2();
+		opt_cost.push_back(f1);
+		opt_dist.push_back(f2);
+
+		model_.remove(f1_bound);		
+		ub_f2.setUB(f2 - omega);
+
+		model_.remove(obj2_);
+	}
+
+	// print the pareto frontier
+	std::cout << "f1: cost" << "\tf2: dist" << std::endl;
+	for (int i = 0; i < opt_cost.size(); ++i)
+	{
+		std::cout << opt_cost[i] << "\t" << opt_dist[i] << std::endl;
+	}
+}
+
+
+int FLPModel::pareto_boundary_v2()
 {
 	std::vector<int> opt_cost;
 	std::vector<int> opt_dist;
@@ -203,11 +272,10 @@ int FLPModel::pareto_boundary()
 	// set f1 as objective
 	model_.add(obj1_);
 
-
+	
 	while (true)
 	{
 		//optimize the first objective
-		//std::cout << std::endl << model_ << std::endl;
 		int z1 = solve();
 		if (cplex_.getStatus() != IloAlgorithm::Optimal)
 		{

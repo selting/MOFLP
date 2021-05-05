@@ -9,7 +9,8 @@ int main()
 	FLPModel model("data/FLP01_alt.dat");
 
 	model.makeCPLEXmodel();
-	model.pareto_boundary();
+	model.pareto_boundary_v1();
+	//model.pareto_boundary_v2();
 
 	std::getchar();
 }
